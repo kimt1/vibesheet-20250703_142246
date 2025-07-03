@@ -1,0 +1,110 @@
+/* Preferred using var & color-mix (ignored if unsupported) */
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ofp-color-primary) 40%, transparent); }
+    70%  { box-shadow: 0 0 0 8px color-mix(in srgb, var(--ofp-color-primary) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ofp-color-primary) 0%, transparent); }
+}
+
+/* --------------------------- Loader / Spinner ---------------------------- */
+.ofp-spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(26, 115, 232, 0.3); /* Fallback */
+    border-top-color: var(--ofp-color-primary);
+    border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--ofp-color-primary) 30%, transparent);
+    border-top-color: var(--ofp-color-primary);
+    animation: ofp-spin 0.8s linear infinite;
+}
+
+@keyframes ofp-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --------------------------- Modal Dialog -------------------------------- */
+.ofp-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: grid;
+    place-items: center;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+}
+.ofp-modal.ofp-open {
+    opacity: 1;
+    pointer-events: all;
+}
+.ofp-modal-content {
+    background: var(--ofp-color-surface);
+    border-radius: var(--ofp-radius-md);
+    width: min(500px, 90vw);
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: var(--ofp-shadow-lg);
+    padding: 24px;
+    animation: ofp-scale-in 160ms ease;
+}
+@keyframes ofp-scale-in {
+    from {transform: scale(0.95);}
+    to   {transform: scale(1);}
+}
+
+/* ----------------------------- Utility ----------------------------------- */
+.ofp-flex     { display: flex; }
+.ofp-inline   { display: inline-flex; }
+.ofp-wrap     { flex-wrap: wrap; }
+.ofp-column   { flex-direction: column; }
+.ofp-center   { align-items: center; justify-content: center; }
+.ofp-grow     { flex: 1 1 auto; }
+.ofp-gap-sm   { gap: 6px; }
+.ofp-gap-md   { gap: 12px; }
+.ofp-gap-lg   { gap: 18px; }
+
+.ofp-mt-sm { margin-top: 6px; }
+.ofp-mt-md { margin-top: 12px; }
+.ofp-mt-lg { margin-top: 18px; }
+
+.ofp-hide { display: none !important; }
+
+.ofp-text-center { text-align: center; }
+
+/* ------------------------------ Animations ------------------------------- */
+/* Slide Down */
+.ofp-slide-down {
+    animation: ofp-slide-down-key 200ms ease-out;
+}
+@keyframes ofp-slide-down-key {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ----------------------- Accessibility / Visually Hidden ----------------- */
+.ofp-visually-hidden {
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
+/* ---------------------- Toast container for multiple --------------------- */
+.ofp-toast-stack {
+    position: fixed;
+    z-index: 2147483647;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Each toast inside stack */
+.ofp-toast-stack .ofp-toast {
+    position: static;
+    transform: none;
+}
+
+/* ============================= End of file ============================== */
