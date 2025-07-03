@@ -1,79 +1,64 @@
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
-/**
- * Primary entry point for Vite configuration.
- * Accepts the current mode and returns a fully-formed config object.
- */
-function defineViteConfig(mode: string): UserConfig {
-  const env = loadEnv(mode, process.cwd(), '');
+const createBasePlugins = (): PluginOption[] => [
+  dts({
+    insertTypesEntry: true,
+    skipDiagnostics: false,
+    outputDir: 'dist/types',
+  }),
+  viteStaticCopy({
+    targets: [
+      { src: 'locales/**', dest: 'locales' },
+      { src: 'assets/**', dest: 'assets' },
+    ],
+  }),
+];
 
-  return {
-    plugins: getPlugins(env),
-    resolve: {
-      alias: resolveAlias(),
-    },
+// Instantiate plugins once to avoid duplicate work/race conditions
+const basePlugins = createBasePlugins();
+
+export default defineConfig(({ mode }) => {
+  const isProd = mode === 'production';
+
+  const extensionConfig = defineConfig({
+    plugins: [
+      ...basePlugins,
+      crx({ manifest: resolve(__dirname, 'src/manifest.json') }),
+    ],
     build: {
-      sourcemap: mode !== 'production',
-      target: 'es2017',
-      outDir: 'dist',
+      outDir: 'dist/extension',
       emptyOutDir: true,
+      minify: isProd ? 'esbuild' : false,
+      sourcemap: !isProd,
       rollupOptions: {
-        output: {
-          manualChunks: undefined,
+        input: {
+          background: resolve(__dirname, 'src/extension/background.ts'),
+          content: resolve(__dirname, 'src/extension/content.ts'),
+          popup: resolve(__dirname, 'src/extension/popup/index.html'),
         },
       },
     },
-    define: {
-      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  });
+
+  const cliConfig = defineConfig({
+    plugins: basePlugins,
+    build: {
+      target: 'node18',
+      outDir: 'dist/cli',
+      emptyOutDir: false,
+      lib: {
+        entry: resolve(__dirname, 'src/cli/index.ts'),
+        formats: ['cjs'],
+        fileName: () => 'omniform-phantom.cjs',
+      },
+      minify: false,
+      rollupOptions: {
+        external: [...builtinModules, /node:.*/],
+        output: { exports: 'named' },
+      },
     },
-  };
-}
+  });
 
-/**
- * Dynamically assemble the list of Vite plugins.
- * Supported frameworks: react, vue. Fallback to react.
- */
-function getPlugins(env: Record<string, string>) {
-  const framework = env.FRAMEWORK?.toLowerCase() ?? 'react';
-  const plugins = [legacy({ targets: ['defaults', 'not IE 11'] })];
-
-  switch (framework) {
-    case 'vue':
-      plugins.push(vue());
-      break;
-    case 'react':
-    default:
-      plugins.push(
-        react({
-          include: '**/*.{tsx,ts,jsx,js}',
-          babel: {
-            plugins: [
-              [
-                '@babel/plugin-transform-react-jsx',
-                { runtime: 'automatic' },
-              ],
-            ],
-          },
-        }),
-      );
-      break;
-  }
-
-  return plugins;
-}
-
-/**
- * Standardised path aliases used across the project.
- */
-function resolveAlias() {
-  const rootDir = path.resolve(__dirname, 'src');
-  return {
-    '@': rootDir,
-    '@components': path.resolve(rootDir, 'components'),
-    '@utils': path.resolve(rootDir, 'utils'),
-    '@types': path.resolve(__dirname, 'types'),
-  };
-}
-
-export default defineConfig(({ mode }) => defineViteConfig(mode));
+  return [extensionConfig, cliConfig];
+});
